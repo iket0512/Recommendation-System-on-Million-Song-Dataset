@@ -1,7 +1,6 @@
 import math
 import json
 import time
-from operator import itemgetter
 
 class Popularity_Based_Model:
     train_data=None
