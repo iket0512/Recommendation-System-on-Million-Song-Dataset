@@ -39,8 +39,8 @@ songs=list(train_data['song_id'].unique())
 # print list(pm.recommend()['title'])
 
 # # User Based:
-# um=rm.User_Based_Model(users[0],users,user_to_song,10)
-# print um.recommend()
+um=rm.User_Based_Model(users[0],users,user_to_song,10)
+print um.recommend()
 
 # # Item Based:
 # im=rm.Item_Based_Model(users[0],user_to_song,song_to_user,songs[1:50])

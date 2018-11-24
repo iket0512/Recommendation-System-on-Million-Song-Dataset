@@ -48,7 +48,7 @@ class User_Based_Model:
             if v==self.user:
                 continue
             self.similarity_users(v)
-        sorted_songs=sorted(self.songs_weight.items(),key=lambda x : x[1],reverse=True)[:output] 
+        sorted_songs=sorted(self.songs_weight.items(),key=lambda x : x[1],reverse=True)[:self.output] 
         return sorted_songs
 
 class Item_Based_Model:
