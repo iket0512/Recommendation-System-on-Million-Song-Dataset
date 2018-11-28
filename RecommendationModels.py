@@ -8,9 +8,9 @@ class Popularity_Based_Model:
         self.train_data=train_data
 
     def recommend(self):
-        song_grouped = self.train_data.groupby(['title']).agg({'listen_count': 'count'}).reset_index()
+        song_grouped = self.train_data.groupby(['song_id']).agg({'listen_count': 'count'}).reset_index()
         grouped_sum = song_grouped['listen_count'].sum()
-        return song_grouped.sort_values(['listen_count', 'title'], ascending = [0,1])[:10]
+        return song_grouped.sort_values(['listen_count', 'song_id'], ascending = [0,1])[:10]
 
 class User_Based_Model:
     user=None
@@ -19,14 +19,15 @@ class User_Based_Model:
     users=None
     user_song_list=None
     train_data=None
-    def __init__(self,user,users,user_to_song,output):
+    def __init__(self,user,users,user_to_song,songs,flag,output):
         self.songs_weight=dict()
         self.user=user
         self.output=output
         self.user_to_song=user_to_song
         self.user_song_list = user_to_song[user]
         self.users=users
-
+        self.songs=songs
+        self.flag=flag
     def similarity_users(self,v):
         list2=self.user_to_song[v]
         common=0
@@ -38,7 +39,7 @@ class User_Based_Model:
                 diff.append(item)
             sm=common/(math.sqrt(len(self.user_song_list))*math.sqrt(len(list2)))
         for item in diff:
-            if item in self.songs_weight:
+            if (item in self.songs_weight) and (self.flag or (item in self.songs)):
                 self.songs_weight[item]+=sm
             else:
                 self.songs_weight[item]=sm
@@ -58,12 +59,14 @@ class Item_Based_Model:
     user_to_song={}
     song_to_user={}
     user_song_list=None
-    def __init__(self, user,user_to_song,song_to_user,songs ):
+    output=10
+    def __init__(self, user,user_to_song,song_to_user,songs,output ):
         self.user=user
         self.user_to_song=user_to_song
         self.song_to_user=song_to_user
         self.user_song_list = user_to_song[user]
         self.songs=songs
+        self.output=output
 
     def similarity_song(self,song1,song2):
         list1=self.song_to_user[song1]
@@ -84,5 +87,5 @@ class Item_Based_Model:
                 sm=sm+x
             weights.append(sm)
         result= list(zip(self.songs,weights))
-        result= sorted(result,key=lambda x: x[1],reverse=True)
+        result= sorted(result,key=lambda x: x[1],reverse=True)[:self.output] 
         return result
