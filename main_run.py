@@ -7,13 +7,12 @@ start_time = time.time()
 import RecommendationModels as rm
 
 train_data=pd.read_csv('train_data.csv',usecols=['user_id','song_id','title','listen_count'])
-users=list(train_data['user_id'].unique())
-songs=list(train_data['song_id'].unique())
 
 user_to_song = {}
 song_to_user={}
 file1=open("train_data.csv",'r+')
 data=file1.readlines()[1:]
+
 for x in data:
 	row=x.split(',')
 	user=row[1]
@@ -38,9 +37,9 @@ songs=list(train_data['song_id'].unique())
 # pm=rm.Popularity_Based_Model(train_data)
 # print list(pm.recommend()['title'])
 
-# # User Based:
-um=rm.User_Based_Model(users[0],users,user_to_song,10)
-print um.recommend()
+# # # User Based:
+# um=rm.User_Based_Model(users[0],users,user_to_song,10)
+# print um.recommend()
 
 # # Item Based:
 # im=rm.Item_Based_Model(users[0],user_to_song,song_to_user,songs[1:50])
