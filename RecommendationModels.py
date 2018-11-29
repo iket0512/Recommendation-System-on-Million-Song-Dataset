@@ -4,10 +4,15 @@ import time
 
 class Popularity_Based_Model:
     train_data=None
+    user_id=None
     def __init__(self, train_data):
         self.train_data=train_data
 
     def recommend(self):
+        # self.user_id=user
+        # test_data_user = self.train_data[self.train_data['user_id'] == self.user_id]
+        # print test_data_user
+        # return  test_data_user
         song_grouped = self.train_data.groupby(['song_id']).agg({'listen_count': 'count'}).reset_index()
         grouped_sum = song_grouped['listen_count'].sum()
         return song_grouped.sort_values(['listen_count', 'song_id'], ascending = [0,1])[:10]
@@ -19,12 +24,10 @@ class User_Based_Model:
     users=None
     user_song_list=None
     train_data=None
-    def __init__(self,user,users,user_to_song,songs,flag,output):
+    def __init__(self,users,user_to_song,songs,flag,output):
         self.songs_weight=dict()
-        self.user=user
         self.output=output
         self.user_to_song=user_to_song
-        self.user_song_list = user_to_song[user]
         self.users=users
         self.songs=songs
         self.flag=flag
@@ -43,8 +46,9 @@ class User_Based_Model:
                 self.songs_weight[item]+=sm
             else:
                 self.songs_weight[item]=sm
-
-    def recommend(self):
+    def recommend(self,user):
+        self.user=user
+        self.user_song_list =self.user_to_song[user]
         for v in self.users:
             if v==self.user:
                 continue
@@ -60,11 +64,9 @@ class Item_Based_Model:
     song_to_user={}
     user_song_list=None
     output=10
-    def __init__(self, user,user_to_song,song_to_user,songs,output ):
-        self.user=user
-        self.user_to_song=user_to_song
+    def __init__(self,user_to_song,song_to_user,songs,output ):
         self.song_to_user=song_to_user
-        self.user_song_list = user_to_song[user]
+        self.user_to_song=user_to_song
         self.songs=songs
         self.output=output
 
@@ -75,7 +77,9 @@ class Item_Based_Model:
         sm1=common/(math.sqrt(len(list1))*math.sqrt(len(list2)))
         return sm1
 
-    def recommend(self):
+    def recommend(self,user):
+        self.user=user
+        self.user_song_list = self.user_to_song[user]
         weights=[]
         for song_cand in self.songs:
             if song_cand in self.user_song_list:
