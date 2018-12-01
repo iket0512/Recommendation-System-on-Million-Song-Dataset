@@ -3,12 +3,13 @@
 import random
 
 class Precision():
-    def __init__(self, test_data, train_data, pm,user_to_song):
+    def __init__(self, test_data, train_data, pm,user_to_song,flag):
         self.test_data = test_data
         self.train_data = train_data
         self.user_test_sample = None
         self.user_to_song=user_to_song
         self.model1 = pm
+        self.flag=flag
         self.pm_training_dict = dict()
         self.test_dict = dict()
         
@@ -22,12 +23,34 @@ class Precision():
         print("Length of user sample:%d" % len(self.users_test_sample))
         
     def get_test_sample_recommendations(self):
-        user_sim_items =self.model1.recommend()
-        user_list=list(user_sim_items["song_id"])
-        for user_id in self.users_test_sample:
-            self.pm_training_dict[user_id] = user_list
-            self.test_dict[user_id] =set(self.user_to_song[user_id])
-            # a= len(self.test_dict[user_id].intersection(self.pm_training_dict[user_id]))
+        if self.flag==1:
+            user_sim_items =self.model1.recommend()
+            user_list=list(user_sim_items["song_id"])
+            for user_id in self.users_test_sample:
+                self.pm_training_dict[user_id] = user_list
+                self.test_dict[user_id] =set(self.user_to_song[user_id])
+                # a= len(self.test_dict[user_id].intersection(self.pm_training_dict[user_id]))
+        elif self.flag==2:
+            # i=0
+            for user_id in self.users_test_sample:
+                # i=i+1
+                # print i
+                song_list = self.model1.recommend(user_id)
+                song_list1,temp=zip(*song_list)
+                # print song_list1
+                self.pm_training_dict[user_id]=song_list1
+                self.test_dict[user_id] =set(self.user_to_song[user_id])
+        elif self.flag==3:
+            # i=0
+            for user_id in self.users_test_sample:
+                # i=i+1
+                # print i
+                song_list = self.model1.recommend(user_id)
+                song_list1,temp=zip(*song_list)
+                # print song_list1
+                self.pm_training_dict[user_id]=song_list1
+                self.test_dict[user_id] =set(self.user_to_song[user_id])      
+                
 
     def calculate_precision_recall(self):
         cutoff_list = list(range(1,11))
@@ -42,7 +65,7 @@ class Precision():
             pm_avg_precision = 0
             pm_avg_recall = 0
             for user_id in self.users_test_sample:
-                pm_hitset = self.test_dict[user_id].intersection(set(self.pm_training_dict[user_id][0:N]))
+                pm_hitset = set(self.test_dict[user_id]).intersection(set(self.pm_training_dict[user_id][0:N]))
                 testset = self.test_dict[user_id]
                 pm_sum_precision += float(len(pm_hitset))/float(N)
                 pm_sum_recall += float(len(pm_hitset))/float(len(testset))

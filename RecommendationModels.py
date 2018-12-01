@@ -3,8 +3,6 @@ import json
 import time
 
 class Popularity_Based_Model:
-    train_data=None
-    user_id=None
     def __init__(self, train_data):
         self.train_data=train_data
 
@@ -14,56 +12,42 @@ class Popularity_Based_Model:
         # print test_data_user
         # return  test_data_user
         song_grouped = self.train_data.groupby(['song_id']).agg({'listen_count': 'count'}).reset_index()
-        grouped_sum = song_grouped['listen_count'].sum()
         return song_grouped.sort_values(['listen_count', 'song_id'], ascending = [0,1])[:10]
 
 class User_Based_Model:
-    user=None
-    user_to_song={}
-    output=10
-    users=None
-    user_song_list=None
-    train_data=None
-    def __init__(self,users,user_to_song,songs,flag,output):
+    def __init__(self,users,user_to_song,songs,output):
         self.songs_weight=dict()
         self.output=output
         self.user_to_song=user_to_song
         self.users=users
         self.songs=songs
-        self.flag=flag
+
     def similarity_users(self,v):
-        list2=self.user_to_song[v]
-        common=0
-        diff=[]
-        for item in list2:
-            if item in self.user_song_list:
-                common=common+1
-            else:
-                diff.append(item)
-            sm=common/(math.sqrt(len(self.user_song_list))*math.sqrt(len(list2)))
+        list2=set(self.user_to_song[v])
+        common=[]
+        common=self.user_song_list.intersection(list2)
+        if len(common)==0:
+            return
+        diff=list2-common
         for item in diff:
-            if (item in self.songs_weight) and (self.flag or (item in self.songs)):
+            sm=len(common)/(math.sqrt(len(self.user_song_list))*math.sqrt(len(list2)))
+            if (item in self.songs_weight):
                 self.songs_weight[item]+=sm
             else:
                 self.songs_weight[item]=sm
+
     def recommend(self,user):
-        self.user=user
-        self.user_song_list =self.user_to_song[user]
-        for v in self.users:
-            if v==self.user:
-                continue
+        # start_time = time.time()
+        temp=self.users
+        temp.remove(user)
+        self.user_song_list =set(self.user_to_song[user])
+        for v in temp:
             self.similarity_users(v)
         sorted_songs=sorted(self.songs_weight.items(),key=lambda x : x[1],reverse=True)[:self.output] 
+        # print("--- %s seconds" % (time.time() - start_time))
         return sorted_songs
 
 class Item_Based_Model:
-    user=None
-    users=None
-    songs=None
-    user_to_song={}
-    song_to_user={}
-    user_song_list=None
-    output=10
     def __init__(self,user_to_song,song_to_user,songs,output ):
         self.song_to_user=song_to_user
         self.user_to_song=user_to_song
@@ -78,18 +62,17 @@ class Item_Based_Model:
         return sm1
 
     def recommend(self,user):
-        self.user=user
-        self.user_song_list = self.user_to_song[user]
+        # start_time = time.time()
         weights=[]
-        for song_cand in self.songs:
-            if song_cand in self.user_song_list:
-                weights.append(0)
-                continue;
-            sm=0    
-            for song in self.user_song_list:
+        user_song_list=set(self.user_to_song[user])
+        temp=set(self.songs)-user_song_list
+        for song_cand in temp:
+            sm=0
+            for song in user_song_list:
                 x=self.similarity_song(song_cand,song)
                 sm=sm+x
             weights.append(sm)
-        result= list(zip(self.songs,weights))
+        result= list(zip(list(temp),weights))
         result= sorted(result,key=lambda x: x[1],reverse=True)[:self.output] 
+        # print("--- %s seconds " % (time.time() - start_time) )
         return result
