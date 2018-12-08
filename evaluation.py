@@ -67,9 +67,10 @@ class Precision():
             pm_avg_recall_list.append(pm_avg_recall)
             pre_sum+=pm_avg_precision;
             rec_sum+=pm_avg_recall;
-        print pre_sum/10
-        print rec_sum/10    
-        return (pm_avg_precision_list, pm_avg_recall_list)
+        print (pre_sum/10)
+        print (rec_sum/10 )   
+        # return (pm_avg_precision_list, pm_avg_recall_list)
+        return pre_sum/10 ,rec_sum/10
 
     def calculate(self): 
         self.pm_training_dict = dict()
