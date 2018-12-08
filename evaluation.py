@@ -3,24 +3,26 @@
 import random
 
 class Precision():
-    def __init__(self, test_data, train_data, pm,user_to_song,flag):
+    def __init__(self, test_data, train_data, pm,user_to_song,flag,percentage):
         self.test_data = test_data
         self.train_data = train_data
-        self.user_test_sample = None
         self.user_to_song=user_to_song
+        self.user_test_sample = None
         self.model1 = pm
         self.flag=flag
-        self.pm_training_dict = dict()
-        self.test_dict = dict()
+        self.create_user_test_sample(percentage)
         
     def create_user_test_sample(self, percentage):
         users_test_and_training = list(set(self.test_data['user_id'].unique()).intersection(set(self.train_data['user_id'].unique())))
-        l=len(users_test_and_training)   
+        l=len(users_test_and_training)  
         k = int(l * percentage)
         random.seed(0)
         indicies = random.sample(range(l),k)
         self.users_test_sample = [users_test_and_training[i] for i in indicies]
         print("Length of user sample:%d" % len(self.users_test_sample))
+        song_grouped =self.train_data.groupby(['song_id']).agg({'listen_count': 'count'}).reset_index()
+        temp=song_grouped.sort_values(['listen_count', 'song_id'], ascending = [0,1])[:10]
+        self.popular=list(temp['song_id'])
         
     def get_test_sample_recommendations(self):
         if self.flag==1:
@@ -31,26 +33,15 @@ class Precision():
                 self.test_dict[user_id] =set(self.user_to_song[user_id])
                 # a= len(self.test_dict[user_id].intersection(self.pm_training_dict[user_id]))
         elif self.flag==2:
-            # i=0
             for user_id in self.users_test_sample:
-                # i=i+1
-                # print i
+                # print user_id
                 song_list = self.model1.recommend(user_id)
-                song_list1,temp=zip(*song_list)
-                # print song_list1
+                if len(song_list)==0:
+                    song_list1=self.popular
+                else:
+                    song_list1,temp=zip(*song_list)
                 self.pm_training_dict[user_id]=song_list1
-                self.test_dict[user_id] =set(self.user_to_song[user_id])
-        elif self.flag==3:
-            # i=0
-            for user_id in self.users_test_sample:
-                # i=i+1
-                # print i
-                song_list = self.model1.recommend(user_id)
-                song_list1,temp=zip(*song_list)
-                # print song_list1
-                self.pm_training_dict[user_id]=song_list1
-                self.test_dict[user_id] =set(self.user_to_song[user_id])      
-                
+                self.test_dict[user_id] =set(self.user_to_song[user_id]) 
 
     def calculate_precision_recall(self):
         cutoff_list = list(range(1,11))
@@ -80,7 +71,8 @@ class Precision():
         print rec_sum/10    
         return (pm_avg_precision_list, pm_avg_recall_list)
 
-    def calculate(self, percentage):
-        self.create_user_test_sample(percentage)
+    def calculate(self): 
+        self.pm_training_dict = dict()
+        self.test_dict = dict()
         self.get_test_sample_recommendations()
         return self.calculate_precision_recall()

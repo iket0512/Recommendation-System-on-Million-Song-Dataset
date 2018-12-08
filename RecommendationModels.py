@@ -5,20 +5,17 @@ import time
 class Popularity_Based_Model:
     def __init__(self, train_data):
         self.train_data=train_data
-
     def recommend(self):
-        # self.user_id=user
-        # test_data_user = self.train_data[self.train_data['user_id'] == self.user_id]
-        # print test_data_user
-        # return  test_data_user
         song_grouped = self.train_data.groupby(['song_id']).agg({'listen_count': 'count'}).reset_index()
         return song_grouped.sort_values(['listen_count', 'song_id'], ascending = [0,1])[:10]
 
 class User_Based_Model:
-    def __init__(self,users,user_to_song,songs,output):
+    def __init__(self,users,user_to_song,songs,output,A,G):
         self.songs_weight=dict()
         self.output=output
         self.user_to_song=user_to_song
+        self.A=A
+        self.G=G
         self.users=users
         self.songs=songs
 
@@ -30,7 +27,10 @@ class User_Based_Model:
             return
         diff=list2-common
         for item in diff:
-            sm=len(common)/(math.sqrt(len(self.user_song_list))*math.sqrt(len(list2)))
+            a=len(self.user_song_list)**self.A
+            b=len(list2)**(1-self.A)
+            sm=len(common)/float(a*b)
+            sm=sm**self.G
             if (item in self.songs_weight):
                 self.songs_weight[item]+=sm
             else:
@@ -38,13 +38,13 @@ class User_Based_Model:
 
     def recommend(self,user):
         # start_time = time.time()
-        temp=self.users
-        temp.remove(user)
+        self.songs_weight=dict()
         self.user_song_list =set(self.user_to_song[user])
-        for v in temp:
+        for v in self.users:
+            if v==user:
+                continue
             self.similarity_users(v)
         sorted_songs=sorted(self.songs_weight.items(),key=lambda x : x[1],reverse=True)[:self.output] 
-        # print("--- %s seconds" % (time.time() - start_time))
         return sorted_songs
 
 class Item_Based_Model:
@@ -76,3 +76,28 @@ class Item_Based_Model:
         result= sorted(result,key=lambda x: x[1],reverse=True)[:self.output] 
         # print("--- %s seconds " % (time.time() - start_time) )
         return result
+
+class User_Filtered_Item_Based:
+    def __init__(self,users,user_to_song,song_to_user,output):
+        self.songs_weight=dict()
+        self.output=output
+        self.user_to_song=user_to_song
+        self.users=users
+        self.song_to_user=song_to_user
+
+    def recommend(self,user):
+        um=User_Based_Model(self.users,self.user_to_song,[],self.output)
+        temp=um.recommend(user)
+        if len(temp)==0:
+            self.songs=[]
+        else:
+            self.songs,x=zip(*temp)
+        im=Item_Based_Model(self.user_to_song,self.song_to_user,self.songs,10)
+        return im.recommend(user)
+
+
+
+
+
+        
+

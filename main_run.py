@@ -67,39 +67,67 @@ for x in data2:
 users=list(train_data['user_id'].unique())
 songs=list(train_data['song_id'].unique())
 
-##############Poplarity Based:
-pm=rm.Popularity_Based_Model(train_data)
-print("\n####### Poplarity Based #######")
-res=eval.Precision(test_data,train_data,pm,user_to_song_test,1)
-a,b=res.calculate(.001)
-# print a
-# print b
+# song_grouped =train_data.groupby(['song_id']).agg({'listen_count': 'count'}).reset_index()
+# popular=song_grouped.sort_values(['listen_count', 'song_id'], ascending = [0,1])[:10]
+# x=list(popular['song_id'])
+
+
+#############Poplarity Based:
+# pm=rm.Popularity_Based_Model(train_data)
+# print("\n####### Poplarity Based #######")
+# res=eval.Precision(test_data,train_data,pm,user_to_song_test,1,1)
+# a,b=res.calculate()
 
 # print user_to_song
 # print song_to_user
 
-# # User Based:
-# print("\n####### User Based #######")
-# um=rm.User_Based_Model(users,user_to_song,songs,10)
-# # print um.recommend(users[0])
-# res=eval.Precision(test_data,train_data,um,user_to_song_test,2)
-# a,b=res.calculate(.0001)
+####### # User Based:
+print("\n####### User Based #######")
+G=0.9
+while G>=0.1:
+	A=0
+	while A<=1:
+		print 'A  , G',A,'    ',G
+		um=rm.User_Based_Model(users,user_to_song,songs,10,A,G)
+		# print um.recommend(users[0])
+		res=eval.Precision(test_data,train_data,um,user_to_song_test,2,0.0005)
+		a,b=res.calculate()
+		A=A+0.10
+	G=G-0.1
+# Result best at A=
 
-# ## Item Based:
+
+
+print("\n####### User Based #######")
+G=0.9
+while G>=0.1:
+	A=0
+	while A<=1:
+		print 'A  , G',A,'    ',G
+		im=rm.Item_Based_Model(user_to_song,song_to_user,songs,10)
+		# print um.recommend(users[0])
+		res=eval.Precision(test_data,train_data,um,user_to_song_test,2,0.0005)
+		a,b=res.calculate()
+		A=A+0.10
+	G=G-0.1
+
+
+
+# ########## Item Based:
 # im=rm.Item_Based_Model(user_to_song,song_to_user,songs,10)
 # print("\n####### Item Based #######")
 # recommend =im.recommend(users[0])
 # print recommend
-# res=eval.Precision(test_data,train_data,im,user_to_song_test,3)
+# res=eval.Precision(test_data,train_data,im,user_to_song_test,2)
 # a,b=res.calculate(.0001)
 
-# ## User based Filtered Item Based:
-# um=rm.User_Based_Model(users,user_to_song,songs,True,500)
-# song_list=um.recommend(users[0])
-# a,weight=zip(*song_list)
-# im=rm.Item_Based_Model(user_to_song,song_to_user,a,200)
-# print("\n####### User based Filtered Item Based #######")
-# recommend= im.recommend(users[0])
+
+########## User based Filtered Item Based:
+# uim=rm.User_Filtered_Item_Based(users,user_to_song,song_to_user,1000)
+# # song_list=uim.recommend("4ea34964c42e838902663c1b4fb9471fa4a77b13")
+# # print song_list
+# res=eval.Precision(test_data,train_data,uim,user_to_song_test,2)
+# a,b=res.calculate(.001)
 
 ## Item Based Filtered User Based
 # im=rm.Item_Based_Model(user_to_song,song_to_user,songs,50)
@@ -109,5 +137,7 @@ a,b=res.calculate(.001)
 # recommend=um.recommend(users[0])
 # print("\n####### User based Filtered Item Based #######")
 # print recommend
+
+
 
 print("--- %s seconds" % (time.time() - start_time))
