@@ -48,18 +48,25 @@ class User_Based_Model:
         return sorted_songs
 
 class Item_Based_Model:
-    def __init__(self,user_to_song,song_to_user,songs,output ):
+    def __init__(self,user_to_song,song_to_user,songs,output,A,G ):
         self.song_to_user=song_to_user
         self.user_to_song=user_to_song
         self.songs=songs
         self.output=output
+        self.A=A
+        self.G=G
 
     def similarity_song(self,song1,song2):
         list1=self.song_to_user[song1]
         list2=self.song_to_user[song2]
+
+        a=len(list1)**self.A
+        b=len(list2)**(1-self.A)
         common=len(set(list1).intersection(list2))
-        sm1=common/(math.sqrt(len(list1))*math.sqrt(len(list2)))
-        return sm1
+        sm=common/float(a*b)
+        sm=sm**self.G
+
+        return sm
 
     def recommend(self,user):
         # start_time = time.time()
@@ -78,22 +85,44 @@ class Item_Based_Model:
         return result
 
 class User_Filtered_Item_Based:
-    def __init__(self,users,user_to_song,song_to_user,output):
+    def __init__(self,users,user_to_song,song_to_user,output,A,G):
         self.songs_weight=dict()
         self.output=output
         self.user_to_song=user_to_song
         self.users=users
         self.song_to_user=song_to_user
+        self.A=A
+        self.G=G
 
     def recommend(self,user):
-        um=User_Based_Model(self.users,self.user_to_song,[],self.output)
+        um=User_Based_Model(self.users,self.user_to_song,[],self.output,self.A,self.B)
         temp=um.recommend(user)
         if len(temp)==0:
             self.songs=[]
         else:
             self.songs,x=zip(*temp)
-        im=Item_Based_Model(self.user_to_song,self.song_to_user,self.songs,10)
+        im=Item_Based_Model(self.user_to_song,self.song_to_user,self.songs,10,self.A,self.B)
         return im.recommend(user)
+
+class Item_Filtered_User_Based:
+    def __init__(self,users,user_to_song,song_to_user,output,A,G):
+        self.songs_weight=dict()
+        self.output=output
+        self.user_to_song=user_to_song
+        self.users=users
+        self.song_to_user=song_to_user
+        self.A=A
+        self.G=G
+
+    def recommend(self,user):
+        im=Item_Based_Model(self.user_to_song,self.song_to_user,self.songs,self.output,self.A,self.B)
+        temp=im.recommend(user)
+        if len(temp)==0:
+            self.songs=[]
+        else:
+            self.songs,x=zip(*temp)
+        um=User_Based_Model(self.users,self.user_to_song,[],self.output,self.A,self.B)
+        return um.recommend(user)
 
 
 

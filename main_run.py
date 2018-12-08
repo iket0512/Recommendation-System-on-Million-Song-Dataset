@@ -82,34 +82,59 @@ songs=list(train_data['song_id'].unique())
 # print song_to_user
 
 ####### # User Based:
-print("\n####### User Based #######")
+# print("\n####### User Based #######")
+# G=0.9
+# while G>=0.1:
+# 	A=0
+# 	while A<=1:
+# 		print 'A  , G',A,'    ',G
+# 		um=rm.User_Based_Model(users,user_to_song,songs,10,A,G)
+# 		# print um.recommend(users[0])
+# 		res=eval.Precision(test_data,train_data,um,user_to_song_test,2,0.0005)
+# 		a,b=res.calculate()
+# 		A=A+0.10
+# 	G=G-0.1
+# # Result best at A=
+
+
+
+print("\n####### Item Based #######")
+a=0
+b=0
+
+maxa=0
+maxb=0
+A1=0
+A2=0
+G1=0
+G2=0
+
 G=0.9
 while G>=0.1:
 	A=0
 	while A<=1:
-		print 'A  , G',A,'    ',G
-		um=rm.User_Based_Model(users,user_to_song,songs,10,A,G)
+		print ('A  , G',A,'    ',G)
+		im=rm.Item_Based_Model(user_to_song,song_to_user,songs,10,A,G)
 		# print um.recommend(users[0])
-		res=eval.Precision(test_data,train_data,um,user_to_song_test,2,0.0005)
+		res=eval.Precision(test_data,train_data,im,user_to_song_test,2,0.0001)
 		a,b=res.calculate()
+		if(maxa < a):
+			maxa=a
+			A1=A
+			G1=G
+		if(maxb < b):
+			maxb=b
+			A2=A
+			G2=G
+
+		print("--- %s seconds" % (time.time() - start_time))
+
 		A=A+0.10
 	G=G-0.1
-# Result best at A=
 
+print("max Precision = " + str(maxa) + " for A = " + str(A1) + " G = "+ str(G1))
 
-
-print("\n####### User Based #######")
-G=0.9
-while G>=0.1:
-	A=0
-	while A<=1:
-		print 'A  , G',A,'    ',G
-		im=rm.Item_Based_Model(user_to_song,song_to_user,songs,10)
-		# print um.recommend(users[0])
-		res=eval.Precision(test_data,train_data,um,user_to_song_test,2,0.0005)
-		a,b=res.calculate()
-		A=A+0.10
-	G=G-0.1
+print("max Recall = " + str(maxb) + " for A = " + str(A2) + " G = " + str(G2))
 
 
 
